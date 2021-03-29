@@ -104,7 +104,11 @@ class MIDIator:
             self.log(f"Key {self.key_binds[message.note].name}")
 
         direct_input_key = self.key_binds[message.note]
-        flag = KeyFlags.PRESS if message.type == "note_on" else KeyFlags.RELEASE
+        #flag = KeyFlags.PRESS if message.type == "note_on" else KeyFlags.RELEASE
+
+        "Extended support for devices that send note_on with 0 velocity instead of note_off"
+        flag = KeyFlags.PRESS if (message.type == "note_on") & (message.velocity != 0) else KeyFlags.RELEASE
+
         send_key_event(direct_input_key, flag)
 
     def translate_mouse_move(self, message):
@@ -116,7 +120,11 @@ class MIDIator:
             self.log(f"Mouse {self.mouse_movement_binds[message.note].name}")
 
         x, y = self.mouse_movement_binds[message.note]
-        polarity = 1 if message.type == "note_on" else -1
+        #polarity = 1 if message.type == "note_on" else -1
+
+        "Extended support for devices that send note_on with 0 velocity instead of note_off"
+        polarity = 1 if (message.type == "note_on") & (message.velocity != 0) else -1
+
         self.mouse_vector[0] += polarity * x * self.mouse_sensitivity
         self.mouse_vector[1] += polarity * y * self.mouse_sensitivity
 
@@ -129,7 +137,11 @@ class MIDIator:
             self.log(f"Mouse {self.mouse_button_binds[message.note][0].name}")
 
         click_flag, release_flag = self.mouse_button_binds[message.note]
-        flag = click_flag if message.type == "note_on" else release_flag
+        #flag = click_flag if message.type == "note_on" else release_flag
+
+        "Extended support for devices that send note_on with 0 velocity instead of note_off"
+        flag = click_flag if (message.type == "note_on") & (message.velocity != 0) else release_flag
+
         send_mouse_button_event(flag)
 
 
@@ -139,7 +151,7 @@ if __name__ == "__main__":
     #####################################################
 
     # A string unique to the MIDI controller to connect to
-    identifier = "Casio"
+    identifier = "Digital Keyboard"
 
     # Map from MIDI key codes to DirectInput key codes
     # Note: "S" in a note name signifies "#" or "sharp"
@@ -153,6 +165,30 @@ if __name__ == "__main__":
         Notes.GS3: DICodes.R
         }
 
+    genshin_key_binds = {
+        Notes.C4: DICodes.Z,
+        Notes.D4: DICodes.X,
+        Notes.E4: DICodes.C,
+        Notes.F4: DICodes.V,
+        Notes.G4: DICodes.B,
+        Notes.A4: DICodes.N,
+        Notes.B4: DICodes.M,
+        Notes.C5: DICodes.A,
+        Notes.D5: DICodes.S,
+        Notes.E5: DICodes.D,
+        Notes.F5: DICodes.F,
+        Notes.G5: DICodes.G,
+        Notes.A5: DICodes.H,
+        Notes.B5: DICodes.J,
+        Notes.C6: DICodes.Q,
+        Notes.D6: DICodes.W,
+        Notes.E6: DICodes.E,
+        Notes.F6: DICodes.R,
+        Notes.G6: DICodes.T,
+        Notes.A6: DICodes.Y,
+        Notes.B6: DICodes.U
+    }
+
     # Map from MIDI key codes to mouse movement directions
     default_mouse_movement_binds = {
         Notes.E4: MouseDirections.LEFT,
@@ -160,6 +196,8 @@ if __name__ == "__main__":
         Notes.FS4: MouseDirections.UP,
         Notes.G4: MouseDirections.RIGHT,
         }
+    no_mouse_movement_binds = {
+    }
 
     # Map from MIDI key codes to mouse button flags
     # The first flag is the pressed flag, the second is the released flag
@@ -167,11 +205,13 @@ if __name__ == "__main__":
         Notes.D4: (MouseFlags.LEFT_CLICK, MouseFlags.LEFT_RELEASE),
         Notes.A4: (MouseFlags.RIGHT_CLICK, MouseFlags.RIGHT_RELEASE)
         }
+    no_mouse_button_binds = {
+        }
 
     #####################################################
     #    E N D   U S E R   C O N F I G U R A T I O N    #
     #####################################################
 
     # Initializing and starting MIDIator
-    midiator = MIDIator(identifier, default_key_binds, default_mouse_movement_binds, default_mouse_button_binds)
+    midiator = MIDIator(identifier, genshin_key_binds, no_mouse_movement_binds, no_mouse_button_binds)
     midiator.start()
